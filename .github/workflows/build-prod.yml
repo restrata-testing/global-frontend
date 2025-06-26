@@ -1,0 +1,147 @@
+name: PROD Build and Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        if: success()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_GLOBAL_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_GLOBAL_PROD }}
+          aws-region: ${{ secrets.AWS_REGION_GLOBAL_PROD }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
+        with:
+          mask-password: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Node dependencies
+        run: yarn install --production
+
+      - name: Build static bundles
+        env:
+          REACT_APP_MAPBOX_ACCESS_TOKEN: ${{ secrets.REACT_APP_MAPBOX_ACCESS_TOKEN }}
+          REACT_APP_REST_ENDPOINT: https://global.restrata.net/
+          REACT_APP_DATA_DOG_CLIENT_ID: ${{ secrets.REACT_APP_DATA_DOG_CLIENT_ID }}
+          REACT_APP_UNIFIED_EXPERIENCE_URL: 'https://global-platform.restrata.net'
+          REACT_APP_OUTSYSTEMS_GLOBAL_DASHBOARD_URL: 'https://live.solutions.restrata.net/RestrataGlobalDashboard/JavaSSO'
+          REACT_APP_OUTSYSTEMS_SITES_URL: 'https://live.solutions.restrata.net/Restrata_Portal/Sites.aspx/JavaSSO'
+          REACT_APP_TINYMCE_EDITOR_SRC: ${{ secrets.REACT_APP_TINYMCE_EDITOR_SRC }}
+          REACT_APP_PDF_ENDPOINT_TOKEN: ${{ secrets.REACT_APP_PDF_ENDPOINT_TOKEN }}
+          NODE_OPTIONS: '--max_old_space_size=4096'
+        run: yarn build
+
+      - name: Generate ARTIFACT_VERSION
+        id: artifact-version
+        run: |
+          export TIME_STAMP=$(date +%Y%m%d-%H%M)
+          export ARTIFACT_VERSION=${TIME_STAMP}
+          echo "ARTIFACT_VERSION=${TIME_STAMP}" >> ${GITHUB_ENV}
+          echo "ARTIFACT_VERSION=${TIME_STAMP}" >> ${GITHUB_OUTPUT}
+          echo "RELEASE_TAG=${ARTIFACT_VERSION}" >> ${GITHUB_ENV}
+          echo "Image Tag - $ARTIFACT_VERSION"
+
+      - name: Docker Build & Push to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        if: success()
+        run: |
+          docker build . -t $ECR_REGISTRY/restrata/global/global-frontend
+          docker tag $ECR_REGISTRY/restrata/global/global-frontend:latest $ECR_REGISTRY/restrata/global/global-frontend:${ARTIFACT_VERSION}
+          docker push $ECR_REGISTRY/restrata/global/global-frontend:latest
+          docker push $ECR_REGISTRY/restrata/global/global-frontend:${ARTIFACT_VERSION}
+
+      - name: Create Release
+        if: success()
+        id: create_release
+        uses: Restrata-Platform-v2/create-release@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          release_name: ${{ env.RELEASE_TAG }} - ${{ github.event.head_commit.message }}
+          body: |
+            Automated release
+          draft: false
+          prerelease: false
+    outputs:
+      ARTIFACT_VERSION: ${{ steps.artifact-version.outputs.ARTIFACT_VERSION }}
+
+  deploy:
+    runs-on: global-prod-bastion
+    needs: build
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add ARTIFACT_VERSION env property with commit short sha
+        run: |
+          echo "ARTIFACT_VERSION=${{ needs.build.outputs.ARTIFACT_VERSION }}" >> ${GITHUB_ENV}
+          echo "${ARTIFACT_VERSION}"
+          echo "Image Tag - $ARTIFACT_VERSION"
+          export PREVIOUS_VERSION=$(helm get values frontend -ojson | jq -r '.image.tag')
+          echo "Previous Version is $PREVIOUS_VERSION"
+          echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> ${GITHUB_ENV}
+
+      - name: Deploy to EKS
+        if: success()
+        run: |
+          helm upgrade --install frontend \
+          --set image.ecr_url=286052822433.dkr.ecr.eu-west-2.amazonaws.com \
+          --set image.tag=${ARTIFACT_VERSION} .k8s/global-frontend -n prod --wait
+
+      - name: Generate Changelog
+        uses: Restrata-Platform-v2/jira-github-changelog@main
+        id: changelog
+        with:
+          head: "${{ env.ARTIFACT_VERSION }}"
+          base: "${{ env.PREVIOUS_VERSION }}"
+          jira-code: '(RP|RO)'
+          jira-host: restrataplatform.atlassian.net
+          jira-username: 'csiriwardhana@restrata.com'
+          jira-password: ${{secrets.JIRA_TOKEN}}
+          pdf: false
+          unshallow: false
+
+      - name: Generate Changelog.md file
+        env:
+          ARTIFACT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          export SUMMARY=$(echo "${{ steps.changelog.outputs.markdown }}")
+          printf "$SUMMARY"
+          printf "# Release Version Global Frontend - $ARTIFACT_VERSION\n\n" > CHANGELOG.md
+          printf "## Release Environment Prod - $ARTIFACT_VERSION\n\n" >> CHANGELOG.md
+          printf "$SUMMARY" >> CHANGELOG.md
+          printf "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+
+      - name: Send mail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{secrets.MAIL_SERVER_ADDRESS}}
+          server_port: ${{secrets.MAIL_PORT}}
+          secure: true
+          username: ${{secrets.MAIL_USERNAME}}
+          password: ${{secrets.MAIL_PASSWORD}}
+          subject: Github Actions Release Note (Global Frontend)
+          to: csiriwardhana@restrata.com,nabeysiriwardana@restrata.com,cmalimage@restrata.com
+          from: No Reply <no-reply@restrata.com>
+          html_body: file://CHANGELOG.md
+          convert_markdown: true

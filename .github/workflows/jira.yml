@@ -1,0 +1,39 @@
+name: JIRA Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: deployCloud
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Changelog
+        uses: Restrata-Platform-v2/jira-github-changelog@main
+        id: changelog
+        with:
+          head: "20240319-1230"
+          base: "20240304-1524"
+          jira-code: '(RP|RO)'
+          jira-host: restrataplatform.atlassian.net
+          jira-username: 'csiriwardhana@restrata.com'
+          jira-password: ${{secrets.JIRA_TOKEN}}
+          pdf: false
+          unshallow: false
+
+      - name: Generate Changelog.md file
+        env:
+          ARTIFACT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          export SUMMARY=$(echo "${{ steps.changelog.outputs.markdown }}")
+          printf "$SUMMARY"
+          printf "# Release Version Global Frontend - $ARTIFACT_VERSION\n\n" > CHANGELOG.md
+          printf "## Release Environment Prod - $ARTIFACT_VERSION\n\n" >> CHANGELOG.md
+          printf "$SUMMARY" >> CHANGELOG.md
+          cat CHANGELOG.md
+          printf "$SUMMARY" >> $GITHUB_STEP_SUMMARY
