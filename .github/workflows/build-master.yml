@@ -107,7 +107,7 @@ jobs:
           fetch-depth: 0
 
       - name: Generate Changelog
-        uses: Restrata-Platform-v2/jira-github-changelog@main
+        uses: restrata-testing/jira-github-changelog@main
         id: changelog
         with:
           head: "20250623-0931-qa"
