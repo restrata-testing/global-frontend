@@ -114,7 +114,7 @@ jobs:
           base: "20250620-1402-qa"
           jira-code: '(RP|RO)'
           jira-host: restrataplatform.atlassian.net
-          jira-username: 'csiriwardhana@restrata.com'
+          jira-username: 'imadusanka@restrata.com'
           jira-password: ${{secrets.JIRA_TOKEN}}
           pdf: false
           unshallow: false
