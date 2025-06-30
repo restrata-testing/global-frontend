@@ -21,43 +21,43 @@ jobs:
           fetch-depth: 0
           ref: dev
 
-      - name: Generate Changelog
-        uses: Restrata-Platform-v2/jira-github-changelog@main
-        id: changelog
-        with:
-          head: "${{ env.ARTIFACT_VERSION }}"
-          base: "${{ env.PREVIOUS_VERSION }}"
-          jira-code: '(RP|RO)'
-          jira-host: restrataplatform.atlassian.net
-          jira-username: 'imadusanka@restrata.com'
-          jira-password: ${{secrets.JIRA_TOKEN_NEW}}
-          pdf: false
-          unshallow: false
+      # - name: Generate Changelog
+      #   uses: Restrata-Platform-v2/jira-github-changelog@main
+      #   id: changelog
+      #   with:
+      #     head: "${{ env.ARTIFACT_VERSION }}"
+      #     base: "${{ env.PREVIOUS_VERSION }}"
+      #     jira-code: '(RP|RO)'
+      #     jira-host: restrataplatform.atlassian.net
+      #     jira-username: 'imadusanka@restrata.com'
+      #     jira-password: ${{secrets.JIRA_TOKEN_NEW}}
+      #     pdf: false
+      #     unshallow: false
 
-      - name: Generate Changelog.md file
-        run: |
-          export SUMMARY=$(echo "${{ steps.changelog.outputs.markdown }}")
-          DATE=$(date '+%Y-%m-%d')
-          printf "$SUMMARY"
+      # - name: Generate Changelog.md file
+      #   run: |
+      #     export SUMMARY=$(echo "${{ steps.changelog.outputs.markdown }}")
+      #     DATE=$(date '+%Y-%m-%d')
+      #     printf "$SUMMARY"
           
-          # Create a temporary file with the new content
-          TEMP_FILE=$(mktemp)
-          printf "# Release Version Global Frontend - $ARTIFACT_VERSION\n" > $TEMP_FILE
-          printf "## Release Environment QA - $ARTIFACT_VERSION\n" >> $TEMP_FILE
-          printf "## Release Date - ${DATE}\n\n" >> $TEMP_FILE
-          printf "$SUMMARY" >> $TEMP_FILE
+      #     # Create a temporary file with the new content
+      #     TEMP_FILE=$(mktemp)
+      #     printf "# Release Version Global Frontend - $ARTIFACT_VERSION\n" > $TEMP_FILE
+      #     printf "## Release Environment QA - $ARTIFACT_VERSION\n" >> $TEMP_FILE
+      #     printf "## Release Date - ${DATE}\n\n" >> $TEMP_FILE
+      #     printf "$SUMMARY" >> $TEMP_FILE
           
-          # If changelog exists, prepend new content to it
-          if [ -f changelog/CHANGELOG.md ]; then
-            cat $TEMP_FILE changelog/CHANGELOG.md > changelog/CHANGELOG.tmp
-            mv changelog/CHANGELOG.tmp changelog/CHANGELOG.md
-          else
-            mkdir -p changelog
-            mv $TEMP_FILE changelog/CHANGELOG.md
-          fi
+      #     # If changelog exists, prepend new content to it
+      #     if [ -f changelog/CHANGELOG.md ]; then
+      #       cat $TEMP_FILE changelog/CHANGELOG.md > changelog/CHANGELOG.tmp
+      #       mv changelog/CHANGELOG.tmp changelog/CHANGELOG.md
+      #     else
+      #       mkdir -p changelog
+      #       mv $TEMP_FILE changelog/CHANGELOG.md
+      #     fi
           
-          printf "$SUMMARY" > changelog/EMAIL_CHANGELOG.md
-          printf "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+      #     printf "$SUMMARY" > changelog/EMAIL_CHANGELOG.md
+      #     printf "$SUMMARY" >> $GITHUB_STEP_SUMMARY
 
 
       - name: Commit changelog changes
