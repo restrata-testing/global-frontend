@@ -62,14 +62,15 @@ jobs:
 
       - name: Commit changelog changes
         run: |
-          git config user.name "imeshrestrata@gmail.com"
+          git config user.name "imeshmadusanka"
+          git config user.emai "imeshrestrata@gmail.com"
           mkdir -p test
           touch test/test.md
           git add test/test.md
           git commit -m "Update changelog"
+          git remote set-url origin https://x-access-token:${{ secrets.WORKFLOW_TOKEN }}@github.com/restrata-testing/global-frontend.git
           git push origin dev --force
         env:
-          GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
           GIT_AUTHOR_NAME: github-action-bot
           GIT_AUTHOR_EMAIL: github-action-bot@noreply.github.com
           GIT_COMMITTER_NAME: github-action-bot
