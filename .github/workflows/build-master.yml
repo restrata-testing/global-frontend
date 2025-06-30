@@ -64,6 +64,7 @@ jobs:
         run: |
           git config user.name "github-action-bot"
           git config user.email "github-action-bot@noreply.github.com"
+          git config --global user.password "${{ secrets.WORKFLOW_TOKEN }}"
           mkdir -p test
           touch test/test.md
           git add test/test.md
