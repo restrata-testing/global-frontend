@@ -68,8 +68,7 @@ jobs:
           touch test/test.md
           git add test/test.md
           git commit -m "Update changelog"
-          git remote set-url origin https://imeshmadusanka:${{ secrets.WORKFLOW_TOKEN }}@github.com/restrata-testing/global-frontend.git
-          git push origin dev --force
+          git push "https://${{ github.actor }}:${{ secrets.WORKFLOW_TOKEN }}@github.com/${{ github.repository }}.git" dev --force
         env:
           GIT_AUTHOR_NAME: github-action-bot
           GIT_AUTHOR_EMAIL: github-action-bot@noreply.github.com
