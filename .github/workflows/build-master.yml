@@ -69,7 +69,7 @@ jobs:
           echo "test" > test/test.md
           git add test/test.md
           git commit -m "Update changelog"
-          git remote set-url origin https://imeshmadusanka:${{ secrets.WORKFLOW_PAT }}@github.com/restrata-testing/global-frontend.git
+          git remote set-url origin https://imeshmadusanka:${{ secrets.WORKFLOW_TOKEN }}@github.com/restrata-testing/global-frontend.git
           git push origin dev --force  
         env:
           GIT_AUTHOR_NAME: github-action-bot
