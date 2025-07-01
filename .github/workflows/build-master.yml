@@ -27,7 +27,7 @@ jobs:
       - name: Create test file
         run: |
           mkdir -p test
-          echo "test" > test/test.md
+          echo "test" >> test/test.md
           
       - name: Verify setup
         run: |
