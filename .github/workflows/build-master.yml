@@ -19,6 +19,8 @@ jobs:
         run: |
           DATE=$(date '+%Y-%m-%d')
           export TIME_STAMP=$(date +%Y%m%d-%H%M)
+          TEMP_FILE=$(mktemp)
+          
           printf "# Release Version Global Frontend -1 \n" > $TEMP_FILE
           printf "## Release Environment QA - 2 \n" >> $TEMP_FILE
           printf "## Release Date - ${DATE}\n\n" >> $TEMP_FILE
