@@ -15,10 +15,10 @@ jobs:
           ref: dev
           fetch-depth: 0
 
-      - name: Set up Git
-        run: |
-          git config --global user.name "imeshmadusanka"
-          git config --global user.email "imeshrestrata@gmail.com"
+      # - name: Set up Git
+      #   run: |
+      #     git config --global user.name "imeshmadusanka"
+      #     git config --global user.email "imeshrestrata@gmail.com"
 
       - name: Generate Changelog.md file
         run: |
