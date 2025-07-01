@@ -29,7 +29,7 @@ jobs:
           printf "# Release Version Global Frontend - $TIME_STAMP\n" > $TEMP_FILE
           printf "## Release Environment QA - $TIME_STAMP\n" >> $TEMP_FILE
           printf "## Release Date - ${TIME_STAMP}\n\n" >> $TEMP_FILE
-          printf "$TIME_STAMP" >> $TEMP_FILE
+          printf "$TIME_STAMP \n\n" >> $TEMP_FILE
           
           # If changelog exists, prepend new content to it
           if [ -f changelog/CHANGELOG.md ]; then
