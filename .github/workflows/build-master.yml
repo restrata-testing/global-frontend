@@ -16,70 +16,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - name: Fetch the code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
           ref: dev
+          fetch-depth: 0
 
-      # - name: Generate Changelog
-      #   uses: Restrata-Platform-v2/jira-github-changelog@main
-      #   id: changelog
-      #   with:
-      #     head: "${{ env.ARTIFACT_VERSION }}"
-      #     base: "${{ env.PREVIOUS_VERSION }}"
-      #     jira-code: '(RP|RO)'
-      #     jira-host: restrataplatform.atlassian.net
-      #     jira-username: 'imadusanka@restrata.com'
-      #     jira-password: ${{secrets.JIRA_TOKEN_NEW}}
-      #     pdf: false
-      #     unshallow: false
-
-      # - name: Generate Changelog.md file
-      #   run: |
-      #     export SUMMARY=$(echo "${{ steps.changelog.outputs.markdown }}")
-      #     DATE=$(date '+%Y-%m-%d')
-      #     printf "$SUMMARY"
-          
-      #     # Create a temporary file with the new content
-      #     TEMP_FILE=$(mktemp)
-      #     printf "# Release Version Global Frontend - $ARTIFACT_VERSION\n" > $TEMP_FILE
-      #     printf "## Release Environment QA - $ARTIFACT_VERSION\n" >> $TEMP_FILE
-      #     printf "## Release Date - ${DATE}\n\n" >> $TEMP_FILE
-      #     printf "$SUMMARY" >> $TEMP_FILE
-          
-      #     # If changelog exists, prepend new content to it
-      #     if [ -f changelog/CHANGELOG.md ]; then
-      #       cat $TEMP_FILE changelog/CHANGELOG.md > changelog/CHANGELOG.tmp
-      #       mv changelog/CHANGELOG.tmp changelog/CHANGELOG.md
-      #     else
-      #       mkdir -p changelog
-      #       mv $TEMP_FILE changelog/CHANGELOG.md
-      #     fi
-          
-      #     printf "$SUMMARY" > changelog/EMAIL_CHANGELOG.md
-      #     printf "$SUMMARY" >> $GITHUB_STEP_SUMMARY
-
-
-      - name: Commit changelog changes
+      - name: Set up Git
         run: |
           git config --global user.name "imeshmadusanka"
           git config --global user.email "imeshrestrata@gmail.com"
+          
+      - name: Create test file
+        run: |
           mkdir -p test
           echo "test" > test/test.md
-
+          
+      - name: Verify setup
+        run: |
           git config --get user.name
           git config --get user.email
           git branch
           cat test/test.md
           
+      - name: Commit and push changes
+        run: |
           git add test/test.md
           git commit -m "Update changelog"
-          git remote set-url origin https://x-access-token:${{ secrets.WORKFLOW_TOKEN }}@github.com/restrata-testing/global-frontend.git
-          git push origin dev --force  
-        # env:
-        #   GIT_AUTHOR_NAME: imeshmadusanka
-        #   GIT_AUTHOR_EMAIL: imeshrestrata@gmail.com
-        #   GIT_COMMITTER_NAME: imeshmadusanka
-        #   GIT_COMMITTER_EMAIL: imeshrestrata@gmail.com
+          git push origin dev
