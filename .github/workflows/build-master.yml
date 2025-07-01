@@ -22,15 +22,14 @@ jobs:
 
       - name: Generate Changelog.md file
         run: |
-          DATE=$(date '+%Y-%m-%d')
-          printf "$DATE"
+          export TIME_STAMP=$(date +%Y%m%d-%H%M)
           
           # Create a temporary file with the new content
           TEMP_FILE=$(mktemp)
-          printf "# Release Version Global Frontend - $DATE\n" > $TEMP_FILE
-          printf "## Release Environment QA - $DATE\n" >> $TEMP_FILE
-          printf "## Release Date - ${DATE}\n\n" >> $TEMP_FILE
-          printf "$DATE" >> $TEMP_FILE
+          printf "# Release Version Global Frontend - $TIME_STAMP\n" > $TEMP_FILE
+          printf "## Release Environment QA - $TIME_STAMP\n" >> $TEMP_FILE
+          printf "## Release Date - ${TIME_STAMP}\n\n" >> $TEMP_FILE
+          printf "$TIME_STAMP" >> $TEMP_FILE
           
           # If changelog exists, prepend new content to it
           if [ -f changelog/CHANGELOG.md ]; then
@@ -41,8 +40,8 @@ jobs:
             mv $TEMP_FILE changelog/CHANGELOG.md
           fi
           
-          printf "$DATE" > changelog/EMAIL_CHANGELOG.md
-          printf "$DATE" >> $GITHUB_STEP_SUMMARY
+          printf "$TIME_STAMP" > changelog/EMAIL_CHANGELOG.md
+          printf "$TIME_STAMP" >> $GITHUB_STEP_SUMMARY
 
           git add changelog/CHANGELOG.md
           git commit -m "Update changelog"
