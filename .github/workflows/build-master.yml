@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p test
           export TIME_STAMP=$(date +%Y%m%d-%H%M)
-          echo "## Date - ${TIME_STAMP}\n\n" >> test/test.md
+          printf "## Date - ${TIME_STAMP}\n\n" >> test/test.md
 
           
       - name: Verify setup
