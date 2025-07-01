@@ -64,9 +64,10 @@ jobs:
         run: |
           git config --global user.name "imeshmadusanka"
           git config --global user.email "imeshrestrata@gmail.com"
-          
+          git branches
           mkdir -p test
           echo "test" > test/test.md
+          cat test/test.md
           git add test/test.md
           git commit -m "Update changelog"
           git remote set-url origin https://x-access-token:${{ secrets.WORKFLOW_TOKEN }}@github.com/restrata-testing/global-frontend.git
