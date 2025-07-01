@@ -15,6 +15,28 @@ jobs:
           ref: dev
           fetch-depth: 0
 
+      - name: Generate Changelog.md file
+        run: |
+          DATE=$(date '+%Y-%m-%d')
+          export TIME_STAMP=$(date +%Y%m%d-%H%M)
+          printf "# Release Version Global Frontend -1 \n" > $TEMP_FILE
+          printf "## Release Environment QA - 2 \n" >> $TEMP_FILE
+          printf "## Release Date - ${DATE}\n\n" >> $TEMP_FILE
+          printf "$TIME_STAMP" >> $TEMP_FILE
+          
+          # If changelog exists, prepend new content to it
+          if [ -f changelog/CHANGELOG.md ]; then
+            cat $TEMP_FILE changelog/CHANGELOG.md > changelog/CHANGELOG.tmp
+            mv changelog/CHANGELOG.tmp changelog/CHANGELOG.md
+          else
+            mkdir -p changelog
+            mv $TEMP_FILE changelog/CHANGELOG.md
+          fi
+          
+          printf "$SUMMARY" > changelog/EMAIL_CHANGELOG.md
+          printf "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+
+
       - name: Set up Git
         run: |
           git config --global user.name "imeshmadusanka"
@@ -25,7 +47,6 @@ jobs:
           mkdir -p test
           export TIME_STAMP=$(date +%Y%m%d-%H%M)
           printf "## Date - ${TIME_STAMP}\n\n" >> test/test.md
-
           
       - name: Verify setup
         run: |
