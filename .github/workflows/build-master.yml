@@ -23,7 +23,9 @@ jobs:
       - name: Create test file
         run: |
           mkdir -p test
-          echo "test" >> test/test.md
+          export TIME_STAMP=$(date +%Y%m%d-%H%M)
+          echo "## Date - ${TIME_STAMP}\n\n" >> test/test.md
+
           
       - name: Verify setup
         run: |
