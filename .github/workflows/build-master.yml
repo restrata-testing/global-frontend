@@ -64,7 +64,7 @@ jobs:
         run: |
           git config --global user.name "imeshmadusanka"
           git config --global user.email "imeshrestrata@gmail.com"
-          git branches
+          git branch
           mkdir -p test
           echo "test" > test/test.md
           cat test/test.md
